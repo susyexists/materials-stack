@@ -1,0 +1,38 @@
+http:
+  routers:
+    frontend:
+      rule: "Host(`amdb.materials.wiki`)"
+      entryPoints: ["websecure"]
+      service: frontend
+      tls:
+        certResolver: letsencrypt
+
+    backend:
+      rule: "Host(`api.amdb.materials.wiki`)"
+      entryPoints: ["websecure"]
+      service: backend
+      tls:
+        certResolver: letsencrypt
+
+    sso:
+      rule: "Host(`sso.materials.wiki`)"
+      entryPoints: ["websecure"]
+      service: sso-server
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    frontend:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:3000"
+
+    backend:
+      loadBalancer:
+        servers:
+          - url: "http://backend:5000"
+
+    sso-server:
+      loadBalancer:
+        servers:
+          - url: "http://sso-server:5001"

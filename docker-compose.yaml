@@ -1,0 +1,47 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/dynamic.yml:/dynamic.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - letsencrypt:/letsencrypt
+    networks:
+      - sso-net
+
+  frontend:
+    build: ./frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`amdb.materials.wiki`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - sso-net
+
+  backend:
+    build: ./backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.amdb.materials.wiki`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=5000"
+    networks:
+      - sso-net
+
+  sso-server:
+    build: ./sso-server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sso.rule=Host(`sso.materials.wiki`)"
+      - "traefik.http.services.sso.loadbalancer.server.port=5001"
+    networks:
+      - sso-net
+
+volumes:
+  letsencrypt:
+
+networks:
+  sso-net:
+    driver: bridge
